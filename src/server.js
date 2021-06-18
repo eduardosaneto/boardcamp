@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import dayjs from 'dayjs';
 import 'dayjs/locale/pt-br.js';
 import { createRequire } from 'module';
 
@@ -13,9 +14,7 @@ const PORT = 4000;
 server.use(cors());
 server.use(express.json());
 
-const require = createRequire(import.meta.url);
-const dayjs = require('dayjs');
-let now = dayjs().locale('pt-br').format("YYYY/MM/DD");
+const now = dayjs().locale('pt-br').format('YYYY-MM-DD');
 
 //CATEGORIES
 server.get('/categories', async (req, res) => {
@@ -36,6 +35,18 @@ server.post('/categories', async (req, res) => {
         await connection.query(`
         INSERT INTO categories (name) VALUES ($1);
         `, [name]);
+
+        const names = await connection.query(`SELECT categories.name FROM categories;`);
+        console.log(names);
+        const nameCheck = names.rows.find(n => name === n.name);
+
+        if(nameCheck){
+            res.sendStatus(409);
+            return
+        } else if (name.trim().lenght === 0){
+            res.sendStatus(400);
+            return
+        } 
         res.sendStatus(201);
     } catch (err) {
         console.log(err)
@@ -57,7 +68,6 @@ server.get('/games', async (req, res) => {
         res.sendStatus(500);
     }
 });
-
 server.post('/games', async (req, res) => {
     try {
         const { name, image, stockTotal, categoryId, pricePerDay } = req.body;
