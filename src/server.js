@@ -34,7 +34,7 @@ server.post('/categories', async (req, res) => {
         console.log(err)
         res.sendStatus(500);
     }
-})
+});
 
 //JOGOS
 server.get('/games', async (req, res) => {
@@ -58,13 +58,69 @@ server.post('/games', async (req, res) => {
             INSERT INTO games 
             (name,image,"stockTotal","categoryId","pricePerDay") 
             VALUES ($1, $2, $3, $4, $5);
-        `, [name,image,stockTotal,categoryId,pricePerDay]);
+        `, [name, image, stockTotal, categoryId, pricePerDay]);
         res.sendStatus(201);
     } catch (err) {
         console.log(err)
         res.sendStatus(500);
     }
-})
+});
 
+//CUSTOMERS
+server.get('/customers', async (req, res) => {
+    try {
+        const customers = await connection.query(`
+            SELECT * FROM customers;
+        `);
+        res.send(customers.rows);
+    } catch (err) {
+        console.log(err)
+        res.sendStatus(500);
+    }
+});
+
+server.get('/customers/:id', async (req, res) => {
+    try {
+        const id = req.params.id
+        const customers = await connection.query(`
+            SELECT * FROM customers WHERE customers.id = $1;
+        `,[id]);
+        res.send(customers.rows);
+    } catch (err) {
+        console.log(err)
+        res.sendStatus(500);
+    }
+});
+
+server.post('/customers', async (req, res) => {
+    try {
+        const { name, phone, cpf, birthday } = req.body;
+        await connection.query(`
+            INSERT INTO customers 
+            (name, phone, cpf, birthday) 
+            VALUES ($1, $2, $3, $4);
+        `, [name, phone, cpf, birthday]);
+        res.sendStatus(201);
+    } catch (err) {
+        console.log(err)
+        res.sendStatus(500);
+    }
+});
+
+server.put('/customers/:id', async (req, res) => {
+    try {
+        const id = req.params.id
+        const { name, phone, cpf, birthday } = req.body;
+        await connection.query(`
+            UPDATE customers SET 
+            name = $2, phone = $3, cpf = $4, birthday = $5
+            WHERE customers.id = $1;
+        `, [id, name, phone, cpf, birthday]);
+        res.sendStatus(200);
+    } catch (err) {
+        console.log(err)
+        res.sendStatus(500);
+    }
+});
 
 server.listen(PORT, () => console.log(`Server is successfully listening at PORT ${PORT}`));
